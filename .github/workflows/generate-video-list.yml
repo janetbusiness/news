@@ -1,0 +1,46 @@
+name: Generate Video List
+
+on:
+  push:
+    paths:
+      - 'videos/**'
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm install fs
+
+      - name: Generate videoList.json
+        run: |
+          const fs = require('fs');
+          const path = './videos';
+          const videoExtensions = ['.mp4', '.webm', '.ogg', '.ts', '.m3u8', '.mov'];
+          fs.readdir(path, (err, files) => {
+            if (err) {
+              console.error(err);
+              process.exit(1);
+            }
+            const videoList = files.filter(file => {
+              const ext = file.slice(file.lastIndexOf('.'));
+              return videoExtensions.includes(ext);
+            });
+            fs.writeFileSync('./videoList.json', JSON.stringify(videoList));
+          });
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git add -A
+          git commit -m "Auto-update videoList.json"
+          git push
