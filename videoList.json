@@ -1,7 +1,4 @@
 [
   {"url": "video1.mp4", "title": "Video 1", "format": "mp4"},
-  {"url": "video2.mp4", "title": "Video 2", "format": "mp4"},
-  // ... more videos
+  {"url": "video2.mp4", "title": "Video 2", "format": "mp4"}
 ]
-
-  
