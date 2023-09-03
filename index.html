@@ -13,6 +13,7 @@
       overflow-x: hidden;
       overflow-y: scroll;
       scroll-snap-type: y mandatory;
+      scroll-padding: 0;
     }
     .video-container {
       height: 100vh;
@@ -27,36 +28,28 @@
       top: 0;
       left: 0;
     }
-    /* Buttons styling to resemble TikTok's UI */
+    /* Updated Buttons styling */
     #shareButton, #calendlyButton {
-      font-size: 36px; /* Increased size */
+      font-size: 36px;
       position: fixed;
-      bottom: 20%; /* Changed from bottom to align vertically */
+      bottom: 20%;
+      right: 10px;
       background-color: transparent;
       border: none;
       color: white;
-      z-index: 1000; /* To make sure they appear above the video */
-    }
-    #shareButton, #calendlyButton {
-      right: 10px; /* Moved to the right side */
-    }
-    #calendlyButton {
-      bottom: 10%;
+      z-index: 1000;
     }
   </style>
 </head>
 <body>
 
-  <div id="videoContainer">
-    <!-- Videos will be loaded here -->
-  </div>
+  <div id="videoContainer"></div>
 
-  <button id="shareButton"><i class="fas fa-share"></i></button>
-  <button id="calendlyButton"><i class="fas fa-calendar-alt"></i></button>
+  <button id="shareButton"><i class="far fa-share-square"></i></button>
+  <button id="calendlyButton"><i class="far fa-calendar-alt"></i></button>
 
   <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
   <script>
-    // Fetch the list of video filenames from videoList.json
     fetch('videoList.json')
       .then(response => response.json())
       .then(videoList => {
@@ -64,31 +57,39 @@
         videoList.forEach(video => {
           const videoElement = `
             <div class="video-container">
-              <video id="${video}" class="video-js" controls preload="auto">
+              <video id="${video}" class="video-js" preload="auto" playsinline>
                 <source src="./videos/${video}" type="video/${video.split('.').pop()}">
               </video>
             </div>`;
           videoContainer.innerHTML += videoElement;
         });
 
-        // Initialize Video.js players and autoplay logic
         videoList.forEach(video => {
-          const player = videojs(document.getElementById(video));
+          const player = videojs(document.getElementById(video), {
+            autoplay: false,
+          });
+
           player.on('ended', () => {
             window.scrollBy(0, window.innerHeight);
+          });
+
+          player.on('scroll', () => {
+            if (window.pageYOffset >= player.el().offsetTop) {
+              player.play();
+            }
           });
         });
       });
 
-    // Web Share API for the share button
+    // Updated Web Share API code
     const shareButton = document.getElementById('shareButton');
     shareButton.addEventListener('click', async () => {
       const currentVideo = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
       if (currentVideo && navigator.share) {
         try {
           await navigator.share({
-            title: 'My Video',
-            text: 'Check out this cool video!',
+            title: currentVideo.id,
+            text: `Check out this video: ${currentVideo.id}`,
             url: currentVideo.currentSrc,
           });
         } catch (err) {
@@ -97,7 +98,6 @@
       }
     });
 
-    // Calendly button
     const calendlyButton = document.getElementById('calendlyButton');
     calendlyButton.addEventListener('click', () => {
       window.open('https://calendly.com/afokapu', '_blank');
