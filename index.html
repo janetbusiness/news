@@ -1,106 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>TikTok Clone</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet">
+  <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
-    #videoContainer {
-      width: 100%;
-      height: 100vh;
-      overflow: hidden;
-    }
-    video {
-      width: 100%;
-      height: 100%;
-    }
-    .action-buttons {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 2;
-    }
-    .action-button {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 20px;
-      font-size: 12px;
-      color: white;
-      text-shadow: 0 0 5px black;
-    }
-    .icon {
-      font-size: 24px;
-      color: white;
-    }
+    /* Your styles to make it look like TikTok */
   </style>
 </head>
 <body>
 
-<div id="videoContainer">
-  <video id="videoPlayer" controls></video>
-</div>
-
-<div class="action-buttons">
-  <div class="action-button" id="shareButton">
-    <div class="icon">
-      <i class="fas fa-share"></i>
-    </div>
-    Share
+  <div id="videoContainer">
+    <!-- Videos will be loaded here -->
   </div>
-  <div class="action-button">
-    <a id="calendlyButton" href="https://calendly.com/afokapu" target="_blank">
-      <div class="icon">
-        <i class="fas fa-calendar-alt"></i>
-      </div>
-    </a>
-    Calendly
-  </div>
-</div>
 
-<script>
-  let currentVideo = 1;
-  const videoPlayer = document.getElementById('videoPlayer');
-  const videoList = ['video1.mp4', 'video2.mp4', 'video3.mp4'];
-  videoPlayer.src = `https://janetbusiness.github.io/news/${videoList[currentVideo - 1]}`;
+  <button id="shareButton">Share</button>
+  <button id="calendlyButton">
+    <i class="fas fa-calendar-alt"></i>
+  </button>
 
-  let startX;
-  videoPlayer.addEventListener('touchstart', (e) => {
-    startX = e.touches[0].clientX;
-  });
-
-  videoPlayer.addEventListener('touchend', (e) => {
-    let endX = e.changedTouches[0].clientX;
-    if (startX - endX > 50) {
-      currentVideo++;
-      if (currentVideo > videoList.length) currentVideo = 1;
-    } else if (endX - startX > 50) {
-      currentVideo--;
-      if (currentVideo < 1) currentVideo = videoList.length;
-    }
-    videoPlayer.src = `https://janetbusiness.github.io/news/${videoList[currentVideo - 1]}`;
-    videoPlayer.play();
-  });
-
-  if (navigator.share) {
-    document.getElementById('shareButton').addEventListener('click', async () => {
-      try {
-        await navigator.share({
-          title: `Video ${currentVideo}`,
-          text: `Check out Video ${currentVideo}!`,
-          url: window.location.href
+  <script>
+    // Fetch the list of video filenames from videoList.json
+    fetch('videoList.json')
+      .then(response => response.json())
+      .then(videoList => {
+        const videoContainer = document.getElementById('videoContainer');
+        videoList.forEach(video => {
+          const videoElement = `
+            <video id="${video}" class="video-js" controls>
+              <source src="./videos/${video}" type="video/${video.split('.').pop()}">
+            </video>`;
+          videoContainer.innerHTML += videoElement;
         });
-      } catch (err) {
-        console.log('Error sharing:', err);
+
+        // Initialize Video.js players
+        videoList.forEach(video => {
+          videojs(document.getElementById(video));
+        });
+      });
+
+    // Web Share API for the share button
+    const shareButton = document.getElementById('shareButton');
+    shareButton.addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'My Video',
+            text: 'Check out this cool video!',
+            url: window.location.href,
+          });
+        } catch (err) {
+          console.error('Share failed:', err);
+        }
+      } else {
+        alert('Web Share API not supported.');
       }
     });
-  }
-</script>
 
+    // Calendly button
+    const calendlyButton = document.getElementById('calendlyButton');
+    calendlyButton.addEventListener('click', () => {
+      window.open('https://calendly.com/afokapu', '_blank');
+    });
+  </script>
 </body>
 </html>
