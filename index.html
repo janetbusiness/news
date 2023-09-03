@@ -4,10 +4,42 @@
   <meta charset="UTF-8">
   <title>TikTok Clone</title>
   <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet">
-  <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
   <style>
-    /* Your styles to make it look like TikTok */
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+    }
+    .video-container {
+      height: 100vh;
+      scroll-snap-align: start;
+      position: relative;
+    }
+    .video-js {
+      width: 100%;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    /* Buttons styling to resemble TikTok's UI */
+    #shareButton, #calendlyButton {
+      font-size: 24px;
+      position: fixed;
+      bottom: 10px;
+      background-color: transparent;
+      border: none;
+      color: white;
+    }
+    #shareButton {
+      left: 10px;
+    }
+    #calendlyButton {
+      right: 10px;
+    }
   </style>
 </head>
 <body>
@@ -16,10 +48,8 @@
     <!-- Videos will be loaded here -->
   </div>
 
-  <button id="shareButton">Share</button>
-  <button id="calendlyButton">
-    <i class="fas fa-calendar-alt"></i>
-  </button>
+  <button id="shareButton"><i class="fas fa-share"></i></button>
+  <button id="calendlyButton"><i class="fas fa-calendar-alt"></i></button>
 
   <script>
     // Fetch the list of video filenames from videoList.json
@@ -29,33 +59,37 @@
         const videoContainer = document.getElementById('videoContainer');
         videoList.forEach(video => {
           const videoElement = `
-            <video id="${video}" class="video-js" controls>
-              <source src="./videos/${video}" type="video/${video.split('.').pop()}">
-            </video>`;
+            <div class="video-container">
+              <video id="${video}" class="video-js" controls>
+                <source src="./videos/${video}" type="video/${video.split('.').pop()}">
+              </video>
+            </div>`;
           videoContainer.innerHTML += videoElement;
         });
 
-        // Initialize Video.js players
+        // Initialize Video.js players and autoplay logic
         videoList.forEach(video => {
-          videojs(document.getElementById(video));
+          const player = videojs(document.getElementById(video));
+          player.on('ended', () => {
+            window.scrollBy(0, window.innerHeight);
+          });
         });
       });
 
     // Web Share API for the share button
     const shareButton = document.getElementById('shareButton');
     shareButton.addEventListener('click', async () => {
-      if (navigator.share) {
+      const currentVideo = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+      if (currentVideo && navigator.share) {
         try {
           await navigator.share({
             title: 'My Video',
             text: 'Check out this cool video!',
-            url: window.location.href,
+            url: currentVideo.currentSrc,
           });
         } catch (err) {
           console.error('Share failed:', err);
         }
-      } else {
-        alert('Web Share API not supported.');
       }
     });
 
