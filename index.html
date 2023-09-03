@@ -12,6 +12,7 @@
       padding: 0;
       overflow-x: hidden;
       scroll-snap-type: y mandatory;
+      overflow-y: scroll;
     }
     .video-container {
       height: 100vh;
@@ -25,14 +26,18 @@
     }
     .buttons {
       position: absolute;
-      bottom: 20%;
+      bottom: 10px;
       right: 10px;
       z-index: 1;
     }
     .btn {
       display: block;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       font-size: 36px;
+      color: white;
+      background: transparent;
+      border: 1px solid white;
+      border-radius: 50%;
     }
   </style>
 </head>
@@ -42,51 +47,67 @@
 
   <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
   <script>
+    // Fetch and display videos
     fetch('videoList.json')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
       .then(videoList => {
         const videoContainer = document.getElementById('videoContainer');
+        
+        if (videoList.length === 0) {
+          throw new Error('No videos found');
+        }
+
         videoList.forEach((video, index) => {
           const videoElement = `
-            <div class="video-container" id="container${index}">
-              <video id="${video}" playsinline preload="none">
-                <source src="./videos/${video}" type="video/${video.split('.').pop()}">
+            <div class="video-container">
+              <video id="video${index}" playsinline preload="none">
+                <source src="${video.url}" type="video/${video.format}">
               </video>
               <div class="buttons">
-                <button class="btn" onclick="shareVideo('${video}', '${index}')"><i class="far fa-share-square"></i></button>
+                <button class="btn" onclick="shareVideo('video${index}', '${video.title}')"><i class="far fa-share-square"></i></button>
                 <button class="btn" onclick="openCalendly()"><i class="far fa-calendar-alt"></i></button>
               </div>
             </div>`;
           videoContainer.innerHTML += videoElement;
         });
+      })
+      .catch(error => {
+        console.error('Error fetching video list:', error);
       });
 
-    function shareVideo(videoId, index) {
-      if (navigator.share) {
-        const videoElement = document.getElementById(videoId);
-        navigator.share({
-          title: `Video ${index}`,
-          text: `Check out this video: Video ${index}`,
-          url: videoElement.currentSrc,
-        });
-      }
-    }
-
-    function openCalendly() {
-      window.open('https://calendly.com/afokapu', '_blank');
-    }
-
+    // Handle scroll event to autoplay video
     window.addEventListener('scroll', function() {
-      const videoElements = document.querySelectorAll('video');
-      videoElements.forEach((video) => {
-        const rect = video.getBoundingClientRect();
-        if (rect.top >= 0 && rect.bottom <= window.innerHeight) {
+      let videos = document.querySelectorAll('video');
+      videos.forEach((video) => {
+        if (video.getBoundingClientRect().top >= 0 && video.getBoundingClientRect().bottom <= window.innerHeight) {
           video.play();
         } else {
           video.pause();
         }
       });
     });
+
+    // Share video
+    function shareVideo(videoId, videoTitle) {
+      if (navigator.share) {
+        const videoElement = document.getElementById(videoId);
+        navigator.share({
+          title: videoTitle,
+          text: `Check out this video: ${videoTitle}`,
+          url: videoElement.currentSrc,
+        });
+      }
+    }
+
+    // Open Calendly
+    function openCalendly() {
+      window.open('https://calendly.com/afokapu', '_blank');
+    }
   </script>
 </body>
 </html>
