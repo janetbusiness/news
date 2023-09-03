@@ -3,111 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <title>TikTok Clone</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      overflow-x: hidden;
-      scroll-snap-type: y mandatory;
-      overflow-y: scroll;
-    }
-    .video-container {
-      height: 100vh;
-      scroll-snap-align: start;
-      position: relative;
-    }
-    video {
-      width: 100%;
-      height: 100vh;
-      object-fit: cover;
-    }
-    .buttons {
-      position: absolute;
+    /* Your styles to make it look like TikTok */
+    #calendlyButton {
+      font-size: 24px;  /* Adjust as needed */
+      position: fixed;
       bottom: 10px;
       right: 10px;
-      z-index: 1;
-    }
-    .btn {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 36px;
+      background-color: transparent;
+      border: none;
       color: white;
-      background: transparent;
-      border: 1px solid white;
-      border-radius: 50%;
+    }
+
+    #shareButton {
+      font-size: 24px;  /* Adjust as needed */
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background-color: transparent;
+      border: none;
+      color: white;
     }
   </style>
 </head>
 <body>
 
-  <div id="videoContainer"></div>
+  <div id="videoContainer">
+    <!-- Videos will be loaded here -->
+  </div>
 
-  <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
+  <button id="shareButton">Share</button>
+  <button id="calendlyButton">
+    <i class="fas fa-calendar-alt"></i>
+  </button>
+
   <script>
-    // Fetch and display videos
+    // Fetch the list of video filenames from videoList.json
     fetch('videoList.json')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(videoList => {
         const videoContainer = document.getElementById('videoContainer');
-        
-        if (videoList.length === 0) {
-          throw new Error('No videos found');
-        }
-
-        videoList.forEach((video, index) => {
+        videoList.forEach(video => {
           const videoElement = `
-            <div class="video-container">
-              <video id="video${index}" playsinline preload="none">
-                <source src="${video.url}" type="video/${video.format}">
-              </video>
-              <div class="buttons">
-                <button class="btn" onclick="shareVideo('video${index}', '${video.title}')"><i class="far fa-share-square"></i></button>
-                <button class="btn" onclick="openCalendly()"><i class="far fa-calendar-alt"></i></button>
-              </div>
-            </div>`;
+            <video id="${video}" class="video-js" controls>
+              <source src="./videos/${video}" type="video/${video.split('.').pop()}">
+            </video>`;
           videoContainer.innerHTML += videoElement;
         });
-      })
-      .catch(error => {
-        console.error('Error fetching video list:', error);
+
+        // Initialize Video.js players
+        videoList.forEach(video => {
+          videojs(document.getElementById(video));
+        });
       });
 
-    // Handle scroll event to autoplay video
-    window.addEventListener('scroll', function() {
-      let videos = document.querySelectorAll('video');
-      videos.forEach((video) => {
-        if (video.getBoundingClientRect().top >= 0 && video.getBoundingClientRect().bottom <= window.innerHeight) {
-          video.play();
-        } else {
-          video.pause();
+    // Web Share API for the share button
+    const shareButton = document.getElementById('shareButton');
+    shareButton.addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'My Video',
+            text: 'Check out this cool video!',
+            url: window.location.href,
+          });
+        } catch (err) {
+          console.error('Share failed:', err);
         }
-      });
+      } else {
+        alert('Web Share API not supported.');
+      }
     });
 
-    // Share video
-    function shareVideo(videoId, videoTitle) {
-      if (navigator.share) {
-        const videoElement = document.getElementById(videoId);
-        navigator.share({
-          title: videoTitle,
-          text: `Check out this video: ${videoTitle}`,
-          url: videoElement.currentSrc,
-        });
-      }
-    }
-
-    // Open Calendly
-    function openCalendly() {
+    // Calendly button
+    const calendlyButton = document.getElementById('calendlyButton');
+    calendlyButton.addEventListener('click', () => {
       window.open('https://calendly.com/afokapu', '_blank');
-    }
+    });
   </script>
 </body>
 </html>
