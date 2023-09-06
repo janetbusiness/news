@@ -1,88 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>TikTok Clone</title>
-  <link href="https://vjs.zencdn.net/7.10.2/video-js.css" rel="stylesheet">
-  <script src="https://vjs.zencdn.net/7.10.2/video.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+  <title>Vimeo Video Playlist</title>
+  <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
-    /* Your styles to make it look like TikTok */
-    #calendlyButton {
-      font-size: 24px;  /* Adjust as needed */
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background-color: transparent;
-      border: none;
-      color: white;
+    body, html {
+      margin: 0;
+      padding: 0;
     }
-
-    #shareButton {
-      font-size: 24px;  /* Adjust as needed */
+    #vimeo-player {
       position: fixed;
-      bottom: 10px;
-      left: 10px;
-      background-color: transparent;
-      border: none;
-      color: white;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1;
+    }
+    .share-button {
+      position: fixed;
+      bottom: 70px;
+      right: 20px;
+      z-index: 1;
+      font-size: 18px;
+      background-color: #000;
+      color: #fff;
+      padding: 10px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
 
-  <div id="videoContainer">
-    <!-- Videos will be loaded here -->
+  <div id="vimeo-player"></div>
+
+  <div class="controls">
+    <button onclick="playVideo()">Play</button>
+    <button onclick="pauseVideo()">Pause</button>
+    <button onclick="playNextVideo()">Next</button>
   </div>
 
-  <button id="shareButton">Share</button>
-  <button id="calendlyButton">
-    <i class="fas fa-calendar-alt"></i>
-  </button>
+  <div class="share-button" onclick="shareVideo()">Share</div>
 
   <script>
-    // Fetch the list of video filenames from videoList.json
-    fetch('videoList.json')
-      .then(response => response.json())
-      .then(videoList => {
-        const videoContainer = document.getElementById('videoContainer');
-        videoList.forEach(video => {
-          const videoElement = `
-            <video id="${video}" class="video-js" controls>
-              <source src="./videos/${video}" type="video/${video.split('.').pop()}">
-            </video>`;
-          videoContainer.innerHTML += videoElement;
-        });
+    let videoIndex = 0;
+    const videoIDs = [861833061, 858969174];
 
-        // Initialize Video.js players
-        videoList.forEach(video => {
-          videojs(document.getElementById(video));
-        });
-      });
+    const options = {
+      id: videoIDs[videoIndex],
+      width: window.innerWidth,
+      height: window.innerHeight,
+      controls: false,
+      responsive: true
+    };
 
-    // Web Share API for the share button
-    const shareButton = document.getElementById('shareButton');
-    shareButton.addEventListener('click', async () => {
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'My Video',
-            text: 'Check out this cool video!',
-            url: window.location.href,
-          });
-        } catch (err) {
-          console.error('Share failed:', err);
-        }
-      } else {
-        alert('Web Share API not supported.');
+    const player = new Vimeo.Player('vimeo-player', options);
+
+    function playVideo() {
+      player.play();
+    }
+
+    function pauseVideo() {
+      player.pause();
+    }
+
+    function playNextVideo() {
+      videoIndex++;
+      if (videoIndex >= videoIDs.length) {
+        videoIndex = 0;
       }
+      player.loadVideo(videoIDs[videoIndex]).then(function() {
+        player.play();
+      });
+    }
+
+    player.on('ended', function() {
+      playNextVideo();
     });
 
-    // Calendly button
-    const calendlyButton = document.getElementById('calendlyButton');
-    calendlyButton.addEventListener('click', () => {
-      window.open('https://calendly.com/afokapu', '_blank');
-    });
+    // Web Share API
+    function shareVideo() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Check out this video!',
+          text: 'Amazing video on Vimeo',
+          url: `https://vimeo.com/${videoIDs[videoIndex]}`
+        })
+        .catch((error) => console.log('Error sharing:', error));
+      } else {
+        alert("Web Share not supported on this browser.");
+      }
+    }
   </script>
+
 </body>
 </html>
