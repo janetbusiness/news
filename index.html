@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <title>Vimeo Video Playlist</title>
+  <link rel="stylesheet" href="FontAwesome/css/all.min.css">
   <script src="https://player.vimeo.com/api/player.js"></script>
   <style>
     body, html {
@@ -14,60 +15,91 @@
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: -1;
     }
-    .controls {
+    .play-pause-button {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 100px;
       z-index: 1;
+      cursor: pointer;
+      opacity: 1;
+      color: white;
+      text-shadow: 0 0 5px black;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      padding: 20px;
+      line-height: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .play-pause-button i {
+      font-size: 80px;
+      padding-left: 20px;
     }
     .share-button {
       position: fixed;
-      bottom: 70px;
-      right: 20px;
+      bottom: 20%;
+      right: 10%;
+      font-size: 50px;
       z-index: 1;
-      font-size: 18px;
-      background-color: #000;
-      color: #fff;
-      padding: 10px;
-      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+      text-shadow: 0 0 5px black;
     }
   </style>
 </head>
 <body>
 
   <div id="vimeo-player"></div>
-
-  <div class="controls">
-    <button onclick="playVideo()">Play</button>
-    <button onclick="pauseVideo()">Pause</button>
-    <button onclick="playNextVideo()">Next</button>
+  <div class="play-pause-button" id="play-pause-button" onclick="togglePlayPause()">
+    <i class="fas fa-play"></i>
   </div>
-
-  <div class="share-button" onclick="shareVideo()">Share</div>
+  <div class="share-button" id="share-button" onclick="shareVideo()">
+    <i class="fas fa-share-alt"></i>
+  </div>
 
   <script>
     let videoIndex = 0;
     const videoIDs = [861833061, 858969174];
+    let isPlaying = false;
 
     const options = {
       id: videoIDs[videoIndex],
       width: window.innerWidth,
       height: window.innerHeight,
       controls: false,
-      responsive: true
+      responsive: true,
+      muted: true
     };
 
     const player = new Vimeo.Player('vimeo-player', options);
+    const playPauseButton = document.getElementById('play-pause-button');
 
-    function playVideo() {
-      player.play();
+    function togglePlayPause() {
+      if (isPlaying) {
+        player.pause();
+      } else {
+        player.play();
+      }
     }
 
-    function pauseVideo() {
-      player.pause();
-    }
+    playPauseButton.addEventListener('click', function() {
+      togglePlayPause();
+    });
+
+    player.on('play', function() {
+      isPlaying = true;
+      playPauseButton.style.opacity = '0';
+    });
+
+    player.on('pause', function() {
+      isPlaying = false;
+      playPauseButton.innerHTML = '<i class="fas fa-play"></i>';
+      playPauseButton.style.opacity = '1';
+    });
 
     function playNextVideo() {
       videoIndex++;
@@ -83,17 +115,15 @@
       playNextVideo();
     });
 
-    // Web Share API
+    // Web Share API for sharing
     function shareVideo() {
       if (navigator.share) {
         navigator.share({
           title: 'Check out this video!',
-          text: 'Amazing video on Vimeo',
           url: `https://vimeo.com/${videoIDs[videoIndex]}`
-        })
-        .catch((error) => console.log('Error sharing:', error));
+        });
       } else {
-        alert("Web Share not supported on this browser.");
+        alert('Web Share API not supported');
       }
     }
   </script>
